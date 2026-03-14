@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenClaw — دليل الأمان الاستخباراتي</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600;700&family=Tajawal:wght@300;400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --acid: #00ff88;
+    --acid2: #00ffcc;
+    --red: #ff2d55;
+    --amber: #ffcc00;
+    --bg: #030a05;
+    --bg2: #061209;
+    --panel: rgba(0,255,136,0.03);
+    --border: rgba(0,255,136,0.15);
+    --text: #c8ffd9;
+    --dim: rgba(200,255,217,0.4);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Tajawal', sans-serif;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom Cursor */
+  #cursor {
+    position: fixed; width: 12px; height: 12px;
+    background: var(--acid); border-radius: 50%;
+    pointer-events: none; z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s, opacity 0.2s;
+    box-shadow: 0 0 20px var(--acid), 0 0 40px rgba(0,255,136,0.5);
+  }
+  #cursor-ring {
+    position: fixed; width: 40px; height: 40px;
+    border: 1px solid rgba(0,255,136,0.5); border-radius: 50%;
+    pointer-events: none; z-index: 9998;
+    transform: translate(-50%, -50%);
+    transition: transform 0.15s ease, width 0.2s, height 0.2s;
+  }
+
+  /* Matrix BG Canvas */
+  #matrix-canvas {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0; opacity: 0.04;
+    pointer-events: none;
+  }
+
+  /* Grid Lines */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,136,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,136,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    z-index: 0; pointer-events: none;
+  }
+
+  /* ============ HERO ============ */
+  #hero {
+    position: relative; z-index: 1;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 40px 20px;
+    overflow: hidden;
+  }
+
+  #hero::before {
+    content: '';
+    position: absolute;
+    width: 800px; height: 800px;
+    background: radial-gradient(circle, rgba(0,255,136,0.06) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: pulse-glow 4s ease-in-out infinite;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(1.2); opacity: 1; }
+  }
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(0,255,136,0.08);
+    border: 1px solid var(--border);
+    padding: 6px 18px; border-radius: 100px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; color: var(--acid);
+    letter-spacing: 3px; text-transform: uppercase;
+    margin-bottom: 30px;
+    animation: fadeInDown 1s both;
+  }
+
+  .hero-badge::before {
+    content: ''; width: 8px; height: 8px;
+    background: var(--acid); border-radius: 50%;
+    animation: blink 1.5s infinite;
+  }
+
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+
+  .hero-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: clamp(48px, 8vw, 110px);
+    font-weight: 700;
+    line-height: 0.9;
+    letter-spacing: -2px;
+    animation: fadeInUp 1s 0.2s both;
+    position: relative;
+  }
+
+  .hero-title .line1 { display: block; color: var(--acid); }
+  .hero-title .line2 {
+    display: block; color: transparent;
+    -webkit-text-stroke: 1px rgba(0,255,136,0.4);
+    font-size: 0.6em;
+  }
+
+  .glitch-text {
+    position: relative;
+    display: inline-block;
+  }
+  .glitch-text::before, .glitch-text::after {
+    content: attr(data-text);
+    position: absolute; top: 0; left: 0;
+    width: 100%;
+  }
+  .glitch-text::before {
+    color: var(--red);
+    animation: glitch1 3s infinite;
+    clip-path: polygon(0 30%, 100% 30%, 100% 50%, 0 50%);
+  }
+  .glitch-text::after {
+    color: var(--acid2);
+    animation: glitch2 3s infinite;
+    clip-path: polygon(0 60%, 100% 60%, 100% 75%, 0 75%);
+  }
+  @keyframes glitch1 {
+    0%, 90%, 100% { transform: translateX(0); opacity: 0; }
+    92% { transform: translateX(-3px); opacity: 0.8; }
+    94% { transform: translateX(3px); opacity: 0.8; }
+    96% { transform: translateX(0); opacity: 0; }
+  }
+  @keyframes glitch2 {
+    0%, 88%, 100% { transform: translateX(0); opacity: 0; }
+    90% { transform: translateX(3px); opacity: 0.8; }
+    93% { transform: translateX(-3px); opacity: 0.8; }
+    95% { transform: translateX(0); opacity: 0; }
+  }
+
+  .hero-desc {
+    max-width: 600px;
+    font-size: 16px; line-height: 1.8;
+    color: var(--dim);
+    margin-top: 24px;
+    animation: fadeInUp 1s 0.4s both;
+  }
+
+  .hero-stats {
+    display: flex; gap: 40px;
+    margin-top: 50px;
+    animation: fadeInUp 1s 0.6s both;
+  }
+
+  .stat {
+    text-align: center;
+  }
+  .stat-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 36px; font-weight: 700;
+    color: var(--acid);
+    display: block;
+  }
+  .stat-label {
+    font-size: 11px; color: var(--dim);
+    letter-spacing: 2px; text-transform: uppercase;
+  }
+
+  .scroll-hint {
+    position: absolute; bottom: 40px;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 8px; color: var(--dim);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px; letter-spacing: 2px;
+    animation: fadeIn 2s 1s both;
+  }
+  .scroll-line {
+    width: 1px; height: 60px;
+    background: linear-gradient(to bottom, var(--acid), transparent);
+    animation: scroll-line 2s infinite;
+  }
+  @keyframes scroll-line {
+    0% { transform: scaleY(0); transform-origin: top; }
+    50% { transform: scaleY(1); transform-origin: top; }
+    51% { transform: scaleY(1); transform-origin: bottom; }
+    100% { transform: scaleY(0); transform-origin: bottom; }
+  }
+
+  /* ============ THREAT RADAR ============ */
+  #radar-section {
+    position: relative; z-index: 1;
+    padding: 80px 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .section-header {
+    display: flex; align-items: center; gap: 16px;
+    margin-bottom: 60px;
+  }
+  .section-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; color: var(--acid);
+    letter-spacing: 3px; opacity: 0.6;
+  }
+  .section-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: clamp(24px, 4vw, 42px);
+    font-weight: 700;
+  }
+  .section-line {
+    flex: 1; height: 1px;
+    background: linear-gradient(to right, var(--border), transparent);
+  }
+
+  .radar-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    align-items: start;
+  }
+
+  #radar-canvas-wrap {
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  #radar-canvas {
+    width: 100%; max-width: 400px;
+    aspect-ratio: 1;
+  }
+
+  .threats-list {
+    display: flex; flex-direction: column; gap: 12px;
+  }
+
+  .threat-item {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .threat-item::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--acid);
+    transform: scaleY(0);
+    transition: transform 0.3s;
+  }
+  .threat-item:hover { border-color: var(--acid); background: rgba(0,255,136,0.06); }
+  .threat-item:hover::before { transform: scaleY(1); }
+  .threat-item.active { border-color: var(--acid); background: rgba(0,255,136,0.08); }
+  .threat-item.active::before { transform: scaleY(1); }
+  .threat-item.critical::before { background: var(--red); }
+  .threat-item.warning::before { background: var(--amber); }
+
+  .threat-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .threat-name {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px; font-weight: 600;
+    color: var(--acid);
+  }
+  .threat-item.critical .threat-name { color: var(--red); }
+  .threat-item.warning .threat-name { color: var(--amber); }
+
+  .threat-badge {
+    font-size: 9px; letter-spacing: 2px;
+    padding: 3px 8px; border-radius: 3px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .badge-critical { background: rgba(255,45,85,0.15); color: var(--red); border: 1px solid rgba(255,45,85,0.3); }
+  .badge-warning { background: rgba(255,204,0,0.1); color: var(--amber); border: 1px solid rgba(255,204,0,0.3); }
+  .badge-info { background: rgba(0,255,136,0.1); color: var(--acid); border: 1px solid rgba(0,255,136,0.2); }
+
+  .threat-desc { font-size: 12px; color: var(--dim); line-height: 1.6; }
+
+  .threat-bar {
+    margin-top: 10px;
+    height: 2px; background: rgba(255,255,255,0.05);
+    border-radius: 2px; overflow: hidden;
+  }
+  .threat-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 1s ease;
+  }
+  .threat-item.critical .threat-fill { background: var(--red); }
+  .threat-item.warning .threat-fill { background: var(--amber); }
+  .threat-item .threat-fill { background: var(--acid); }
+
+  /* ============ AI ANALYZER ============ */
+  #ai-section {
+    position: relative; z-index: 1;
+    padding: 80px 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .ai-container {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .ai-header {
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(0,255,136,0.03);
+  }
+  .ai-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-red { background: var(--red); }
+  .dot-amber { background: var(--amber); }
+  .dot-green { background: var(--acid); }
+  .ai-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px; color: var(--acid);
+    margin-right: auto;
+  }
+  .ai-status {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px; color: var(--dim);
+    letter-spacing: 2px;
+  }
+
+  .ai-body {
+    display: grid; grid-template-columns: 1fr 1fr;
+    min-height: 400px;
+  }
+
+  .ai-input-panel {
+    padding: 28px;
+    border-left: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 16px;
+  }
+
+  .ai-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px; color: var(--dim);
+    letter-spacing: 2px; text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .ai-select {
+    width: 100%;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: 'Tajawal', sans-serif;
+    font-size: 14px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.3s;
+  }
+  .ai-select:focus { border-color: var(--acid); }
+
+  .ai-textarea {
+    width: 100%; flex: 1;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    color: var(--text);
+    font-family: 'Tajawal', sans-serif;
+    font-size: 14px;
+    line-height: 1.7;
+    resize: vertical; min-height: 140px;
+    outline: none;
+    transition: border-color 0.3s;
+    direction: rtl;
+  }
+  .ai-textarea:focus { border-color: var(--acid); }
+  .ai-textarea::placeholder { color: var(--dim); }
+
+  .ai-btn {
+    padding: 14px 28px;
+    background: var(--acid);
+    color: #000;
+    border: none; border-radius: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px; font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    position: relative; overflow: hidden;
+  }
+  .ai-btn::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: white;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .ai-btn:hover::after { opacity: 0.15; }
+  .ai-btn:active { transform: scale(0.98); }
+  .ai-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .ai-output-panel {
+    padding: 28px;
+    display: flex; flex-direction: column;
+    background: rgba(0,0,0,0.2);
+  }
+
+  .ai-output {
+    flex: 1;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px; line-height: 1.8;
+    color: var(--text);
+    direction: rtl; text-align: right;
+    overflow-y: auto;
+    padding: 4px;
+  }
+
+  .output-placeholder {
+    color: var(--dim);
+    font-size: 12px;
+    text-align: center;
+    margin: auto;
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+  }
+
+  .terminal-cursor {
+    display: inline-block;
+    width: 8px; height: 14px;
+    background: var(--acid);
+    animation: blink 1s infinite;
+    vertical-align: middle;
+    margin-right: 4px;
+  }
+
+  .thinking {
+    display: flex; align-items: center; gap: 10px;
+    color: var(--dim);
+    font-size: 12px;
+  }
+  .thinking-dots { display: flex; gap: 4px; }
+  .thinking-dot {
+    width: 6px; height: 6px;
+    background: var(--acid); border-radius: 50%;
+    animation: dot-bounce 1.4s infinite;
+  }
+  .thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+  .thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes dot-bounce {
+    0%, 80%, 100% { transform: scale(0.8); opacity: 0.4; }
+    40% { transform: scale(1.2); opacity: 1; }
+  }
+
+  .ai-response { animation: typeIn 0.5s ease; }
+  @keyframes typeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+  .response-section { margin-bottom: 20px; }
+  .response-tag {
+    display: inline-block;
+    background: rgba(0,255,136,0.1);
+    border: 1px solid rgba(0,255,136,0.3);
+    color: var(--acid);
+    padding: 2px 10px; border-radius: 4px;
+    font-size: 10px; letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+  .response-tag.danger { background: rgba(255,45,85,0.1); border-color: rgba(255,45,85,0.3); color: var(--red); }
+  .response-tag.warn { background: rgba(255,204,0,0.1); border-color: rgba(255,204,0,0.3); color: var(--amber); }
+  .response-text { font-size: 13px; line-height: 1.9; direction: rtl; color: var(--text); }
+
+  .risk-meter {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: rgba(0,0,0,0.3);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .risk-label { font-size: 10px; color: var(--dim); letter-spacing: 2px; margin-bottom: 8px; }
+  .risk-bar { height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; overflow: hidden; }
+  .risk-fill { height: 100%; border-radius: 3px; transition: width 1.5s cubic-bezier(0.4,0,0.2,1); }
+
+  /* ============ CHECKLIST ============ */
+  #checklist-section {
+    position: relative; z-index: 1;
+    padding: 80px 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .checklist-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 20px;
+  }
+
+  .check-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.3s, border-color 0.3s;
+  }
+  .check-card:hover { transform: translateY(-4px); border-color: rgba(0,255,136,0.4); }
+
+  .check-card-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(0,255,136,0.04);
+  }
+  .check-icon { font-size: 20px; }
+  .check-card-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px; font-weight: 600;
+    color: var(--acid);
+  }
+  .check-count {
+    margin-right: auto;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; color: var(--dim);
+  }
+
+  .check-list {
+    padding: 16px 24px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+
+  .check-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .check-item:hover .check-box { border-color: var(--acid); }
+
+  .check-box {
+    width: 18px; height: 18px; min-width: 18px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-top: 2px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+  .check-box.checked {
+    background: var(--acid);
+    border-color: var(--acid);
+  }
+  .check-box.checked::after {
+    content: '✓';
+    color: #000; font-size: 11px; font-weight: 700;
+  }
+
+  .check-text {
+    font-size: 13px; line-height: 1.6; color: var(--text);
+    transition: all 0.3s;
+  }
+  .check-item.done .check-text {
+    color: var(--dim);
+    text-decoration: line-through;
+  }
+
+  .progress-bar {
+    margin: 0 24px 20px;
+    height: 3px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(to right, var(--acid), var(--acid2));
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+
+  /* ============ TERMINAL ============ */
+  #terminal-section {
+    position: relative; z-index: 1;
+    padding: 80px 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .terminal-wrap {
+    background: #020c04;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 0 60px rgba(0,255,136,0.06), 0 40px 80px rgba(0,0,0,0.6);
+  }
+
+  .terminal-bar {
+    padding: 14px 20px;
+    background: rgba(0,255,136,0.04);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .t-dot { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; }
+  .t-red { background: #ff5f57; }
+  .t-amber { background: #ffbd2e; }
+  .t-green { background: #28c940; }
+  .terminal-title {
+    margin-right: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px; color: var(--dim);
+  }
+
+  .terminal-body {
+    padding: 24px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px; line-height: 1.7;
+    min-height: 300px;
+    max-height: 500px;
+    overflow-y: auto;
+  }
+
+  .t-line { display: flex; gap: 10px; margin-bottom: 4px; }
+  .t-prompt { color: var(--acid); min-width: fit-content; }
+  .t-cmd { color: #fff; }
+  .t-out { color: var(--dim); margin-bottom: 8px; }
+  .t-err { color: var(--red); }
+  .t-suc { color: var(--acid); }
+  .t-warn-line { color: var(--amber); }
+
+  .t-input-line {
+    display: flex; align-items: center; gap: 10px;
+    margin-top: 16px;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+  .t-input {
+    flex: 1; background: none; border: none;
+    color: #fff;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px; outline: none;
+    direction: ltr;
+  }
+
+  /* ============ FOOTER ============ */
+  footer {
+    position: relative; z-index: 1;
+    padding: 60px 40px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    color: var(--dim);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; letter-spacing: 2px;
+  }
+  footer span { color: var(--acid); }
+
+  /* ============ ANIMATIONS ============ */
+  @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: none; } }
+  @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  /* ============ SCROLLBAR ============ */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--acid); }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 768px) {
+    .radar-grid, .ai-body { grid-template-columns: 1fr; }
+    .hero-stats { gap: 24px; flex-wrap: wrap; justify-content: center; }
+    #radar-section, #ai-section, #checklist-section, #terminal-section { padding: 60px 20px; }
+    .ai-input-panel { border-left: none; border-top: 1px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<canvas id="matrix-canvas"></canvas>
+
+<!-- ===== HERO ===== -->
+<section id="hero">
+  <div class="hero-badge">🔒 نظام الأمان النشط — v4.2.1</div>
+  <h1 class="hero-title">
+    <span class="line1">
+      <span class="glitch-text" data-text="OPENCLAW">OPENCLAW</span>
+    </span>
+    <span class="line2">SECURITY INTELLIGENCE</span>
+  </h1>
+  <p class="hero-desc">
+    دليل الأمان التفاعلي الأكثر تقدماً — مجهّز بذكاء اصطناعي حقيقي لتحليل التهديدات وتوليد توصيات أمنية مخصصة
+  </p>
+  <div class="hero-stats">
+    <div class="stat">
+      <span class="stat-num" id="stat1">0</span>
+      <span class="stat-label">تهديداً موثقاً</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num" id="stat2">0</span>
+      <span class="stat-label">ضابط أمني</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num" id="stat3">0%</span>
+      <span class="stat-label">نسبة الحماية</span>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <span>SCROLL</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- ===== RADAR ===== -->
+<section id="radar-section">
+  <div class="section-header">
+    <span class="section-num">01</span>
+    <h2 class="section-title">رادار التهديدات</h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="radar-grid">
+    <div id="radar-canvas-wrap">
+      <canvas id="radar-canvas" width="400" height="400"></canvas>
+    </div>
+    <div class="threats-list" id="threats-list">
+      <!-- Filled by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- ===== AI ANALYZER ===== -->
+<section id="ai-section">
+  <div class="section-header">
+    <span class="section-num">02</span>
+    <h2 class="section-title">محلل التهديدات بالذكاء الاصطناعي</h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="ai-container">
+    <div class="ai-header">
+      <div class="ai-dot dot-red"></div>
+      <div class="ai-dot dot-amber"></div>
+      <div class="ai-dot dot-green"></div>
+      <span class="ai-title">OPENCLAW AI SECURITY ANALYZER — Claude Sonnet 4</span>
+      <span class="ai-status" id="ai-status-text">READY</span>
+    </div>
+    <div class="ai-body">
+      <div class="ai-input-panel">
+        <div>
+          <div class="ai-label">نوع التحليل المطلوب</div>
+          <select class="ai-select" id="analysis-type">
+            <option value="threat">تحليل تهديد محدد</option>
+            <option value="code">مراجعة أمنية للكود</option>
+            <option value="config">تقييم إعدادات الأمان</option>
+            <option value="incident">تحليل حادث أمني</option>
+            <option value="hardening">توصيات تصليب النظام</option>
+          </select>
+        </div>
+        <div style="flex:1; display:flex; flex-direction:column;">
+          <div class="ai-label">وصف الموقف أو السؤال</div>
+          <textarea class="ai-textarea" id="ai-query" placeholder="مثال: لاحظت محاولات دخول متكررة من عناوين IP مجهولة على منفذ SSH في السجلات..."></textarea>
+        </div>
+        <button class="ai-btn" id="analyze-btn" onclick="runAnalysis()">
+          <span>⚡</span> تشغيل التحليل الأمني
+        </button>
+      </div>
+      <div class="ai-output-panel">
+        <div class="ai-label">نتائج التحليل</div>
+        <div class="ai-output" id="ai-output">
+          <div class="output-placeholder" id="output-placeholder">
+            <span style="font-size:40px">🛡</span>
+            <span>في انتظار طلب التحليل...</span>
+            <span style="font-size:11px; opacity:0.5;">اكتب استفسارك الأمني وابدأ التحليل</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CHECKLIST ===== -->
+<section id="checklist-section">
+  <div class="section-header">
+    <span class="section-num">03</span>
+    <h2 class="section-title">قائمة الفحص الأمني التفاعلية</h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="checklist-grid" id="checklist-grid">
+    <!-- Filled by JS -->
+  </div>
+</section>
+
+<!-- ===== TERMINAL ===== -->
+<section id="terminal-section">
+  <div class="section-header">
+    <span class="section-num">04</span>
+    <h2 class="section-title">الطرفية الأمنية</h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="terminal-wrap">
+    <div class="terminal-bar">
+      <div class="t-dot t-red"></div>
+      <div class="t-dot t-amber"></div>
+      <div class="t-dot t-green"></div>
+      <span class="terminal-title">openclaw-security-terminal — bash</span>
+    </div>
+    <div class="terminal-body" id="terminal-body">
+      <div class="t-line">
+        <span class="t-prompt">openclaw@security:~$</span>
+        <span class="t-cmd">./initialize_security_suite.sh</span>
+      </div>
+      <div class="t-out">[✓] Loading security modules...</div>
+      <div class="t-out">[✓] Threat intelligence database: <span style="color:var(--acid)">ONLINE</span></div>
+      <div class="t-out">[✓] AI analysis engine: <span style="color:var(--acid)">READY</span></div>
+      <div class="t-out">[✓] OpenClaw Security Suite initialized successfully</div>
+      <br>
+      <div class="t-suc">Welcome to OpenClaw Security Terminal v4.2.1</div>
+      <div class="t-out">Type 'help' to see available commands</div>
+      <br>
+    </div>
+    <div class="t-input-line" style="padding: 0 24px 20px">
+      <span class="t-prompt" style="font-family:'Share Tech Mono',monospace">openclaw@security:~$</span>
+      <input class="t-input" id="terminal-input" placeholder="اكتب أمراً..." onkeydown="handleTerminal(event)">
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>OPENCLAW SECURITY INTELLIGENCE GUIDE — <span>2025</span></p>
+  <p style="margin-top:10px;opacity:0.4;">مدعوم بذكاء اصطناعي Claude من Anthropic</p>
+</footer>
+
+<script>
+// ===== CURSOR =====
+const cursor = document.getElementById('cursor');
+const cursorRing = document.getElementById('cursor-ring');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top = e.clientY + 'px';
+  setTimeout(() => {
+    cursorRing.style.left = e.clientX + 'px';
+    cursorRing.style.top = e.clientY + 'px';
+  }, 80);
+});
+document.querySelectorAll('button, a, select, textarea, input, .threat-item, .check-item').forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    cursor.style.transform = 'translate(-50%,-50%) scale(2)';
+    cursorRing.style.width = '60px'; cursorRing.style.height = '60px';
+  });
+  el.addEventListener('mouseleave', () => {
+    cursor.style.transform = 'translate(-50%,-50%) scale(1)';
+    cursorRing.style.width = '40px'; cursorRing.style.height = '40px';
+  });
+});
+
+// ===== MATRIX =====
+const canvas = document.getElementById('matrix-canvas');
+const ctx = canvas.getContext('2d');
+function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+resizeCanvas(); window.addEventListener('resize', resizeCanvas);
+const cols = Math.floor(window.innerWidth / 20);
+const drops = new Array(cols).fill(0);
+const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノ';
+function matrixDraw() {
+  ctx.fillStyle = 'rgba(3,10,5,0.05)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#00ff88';
+  ctx.font = '14px monospace';
+  drops.forEach((y, i) => {
+    const char = chars[Math.floor(Math.random() * chars.length)];
+    ctx.fillText(char, i * 20, y * 20);
+    if (y * 20 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+    else drops[i]++;
+  });
+}
+setInterval(matrixDraw, 50);
+
+// ===== STATS COUNTER =====
+function animateCount(el, target, suffix='', duration=2000) {
+  let start = 0; const step = target / (duration / 16);
+  const timer = setInterval(() => {
+    start += step;
+    if (start >= target) { el.textContent = target + suffix; clearInterval(timer); }
+    else el.textContent = Math.floor(start) + suffix;
+  }, 16);
+}
+setTimeout(() => {
+  animateCount(document.getElementById('stat1'), 127);
+  animateCount(document.getElementById('stat2'), 48);
+  animateCount(document.getElementById('stat3'), 94, '%');
+}, 500);
+
+// ===== RADAR CANVAS =====
+const rCanvas = document.getElementById('radar-canvas');
+const rCtx = rCanvas.getContext('2d');
+let radarAngle = 0;
+const radarBlips = [
+  { angle: 0.3, dist: 0.45, type: 'critical' },
+  { angle: 1.2, dist: 0.7, type: 'warning' },
+  { angle: 2.1, dist: 0.3, type: 'info' },
+  { angle: 3.5, dist: 0.6, type: 'critical' },
+  { angle: 4.8, dist: 0.5, type: 'warning' },
+  { angle: 5.5, dist: 0.8, type: 'info' },
+];
+const blipTrails = radarBlips.map(() => []);
+
+function drawRadar() {
+  const W = rCanvas.width, H = rCanvas.height;
+  const cx = W/2, cy = H/2, r = Math.min(W,H)*0.44;
+  rCtx.clearRect(0,0,W,H);
+
+  // BG
+  rCtx.fillStyle = '#020a04';
+  rCtx.fillRect(0,0,W,H);
+
+  // Rings
+  for (let i=1; i<=4; i++) {
+    rCtx.beginPath();
+    rCtx.arc(cx,cy, r*i/4, 0, Math.PI*2);
+    rCtx.strokeStyle = 'rgba(0,255,136,0.12)';
+    rCtx.lineWidth = 1;
+    rCtx.stroke();
+  }
+
+  // Cross lines
+  rCtx.strokeStyle = 'rgba(0,255,136,0.08)';
+  rCtx.lineWidth = 1;
+  for (let a=0; a<Math.PI*2; a+=Math.PI/6) {
+    rCtx.beginPath();
+    rCtx.moveTo(cx,cy);
+    rCtx.lineTo(cx + Math.cos(a)*r, cy + Math.sin(a)*r);
+    rCtx.stroke();
+  }
+
+  // Sweep
+  const sweepGrad = rCtx.createConicalGradient
+    ? rCtx.createConicalGradient(cx, cy, radarAngle)
+    : null;
+
+  const sweep = rCtx.createRadialGradient(cx,cy,0, cx,cy,r);
+  sweep.addColorStop(0, 'rgba(0,255,136,0)');
+  sweep.addColorStop(1, 'rgba(0,255,136,0)');
+
+  // Draw sweep arc
+  rCtx.save();
+  rCtx.translate(cx, cy);
+  rCtx.rotate(radarAngle);
+  const sweepArc = rCtx.createLinearGradient(0, 0, r, 0);
+  sweepArc.addColorStop(0, 'rgba(0,255,136,0.4)');
+  sweepArc.addColorStop(1, 'rgba(0,255,136,0)');
+  rCtx.beginPath();
+  rCtx.moveTo(0, 0);
+  rCtx.arc(0, 0, r, -0.5, 0);
+  rCtx.fillStyle = sweepArc;
+  rCtx.fill();
+  rCtx.restore();
+
+  // Sweep line
+  rCtx.beginPath();
+  rCtx.moveTo(cx, cy);
+  rCtx.lineTo(cx + Math.cos(radarAngle)*r, cy + Math.sin(radarAngle)*r);
+  rCtx.strokeStyle = 'rgba(0,255,136,0.8)';
+  rCtx.lineWidth = 2;
+  rCtx.stroke();
+
+  // Center dot
+  rCtx.beginPath();
+  rCtx.arc(cx, cy, 4, 0, Math.PI*2);
+  rCtx.fillStyle = 'var(--acid)';
+  rCtx.fill();
+
+  // Blips
+  radarBlips.forEach((b, i) => {
+    const bx = cx + Math.cos(b.angle)*r*b.dist;
+    const by = cy + Math.sin(b.angle)*r*b.dist;
+    const angDiff = ((radarAngle - b.angle) % (Math.PI*2) + Math.PI*2) % (Math.PI*2);
+    const intensity = angDiff < 0.5 ? 1 : Math.max(0, 1 - angDiff/3);
+    const colors = { critical: '#ff2d55', warning: '#ffcc00', info: '#00ff88' };
+    const col = colors[b.type];
+    if (intensity > 0) {
+      rCtx.beginPath();
+      rCtx.arc(bx, by, 5, 0, Math.PI*2);
+      rCtx.fillStyle = col;
+      rCtx.globalAlpha = intensity;
+      rCtx.fill();
+      rCtx.beginPath();
+      rCtx.arc(bx, by, 12, 0, Math.PI*2);
+      rCtx.strokeStyle = col;
+      rCtx.lineWidth = 1;
+      rCtx.globalAlpha = intensity * 0.3;
+      rCtx.stroke();
+      rCtx.globalAlpha = 1;
+    }
+  });
+
+  radarAngle += 0.03;
+  requestAnimationFrame(drawRadar);
+}
+drawRadar();
+
+// ===== THREATS =====
+const threats = [
+  { name: 'SQL Injection', type: 'critical', badge: 'CRITICAL', desc: 'محاولات حقن SQL في نقاط النهاية — 23 محاولة/ساعة', fill: 92 },
+  { name: 'Brute Force SSH', type: 'critical', badge: 'CRITICAL', desc: 'هجمات قوة غاشمة على منفذ 22 من عناوين IP متعددة', fill: 78 },
+  { name: 'XSS Attempt', type: 'warning', badge: 'WARNING', desc: 'اكتشاف محاولات حقن سكريبتات في نماذج المستخدم', fill: 55 },
+  { name: 'Outdated Dependencies', type: 'warning', badge: 'WARNING', desc: '7 مكتبات تحتوي على ثغرات معروفة (CVEs مفتوحة)', fill: 63 },
+  { name: 'Suspicious API', type: '', badge: 'INFO', desc: 'حركة مرور غير اعتيادية على نقطة API /v2/admin', fill: 34 },
+];
+const tList = document.getElementById('threats-list');
+threats.forEach((t, i) => {
+  const div = document.createElement('div');
+  div.className = `threat-item ${t.type}`;
+  div.innerHTML = `
+    <div class="threat-header">
+      <span class="threat-name">${t.name}</span>
+      <span class="threat-badge badge-${t.type || 'info'}">${t.badge}</span>
+    </div>
+    <div class="threat-desc">${t.desc}</div>
+    <div class="threat-bar"><div class="threat-fill" style="width:0%" data-fill="${t.fill}"></div></div>
+  `;
+  tList.appendChild(div);
+  setTimeout(() => div.querySelector('.threat-fill').style.width = t.fill+'%', 300 + i*100);
+});
+
+// ===== CHECKLIST =====
+const checkData = [
+  { icon: '🔐', title: 'مصادقة وصلاحيات', items: [
+    'تفعيل المصادقة الثنائية (2FA) لجميع الحسابات',
+    'تطبيق مبدأ الصلاحية الأدنى (Least Privilege)',
+    'مراجعة دورية لصلاحيات المستخدمين كل 30 يوماً',
+    'تعطيل الحسابات الافتراضية وكلمات المرور الافتراضية',
+    'استخدام مفاتيح SSH بدلاً من كلمات المرور'
+  ]},
+  { icon: '🛡️', title: 'حماية الكود المصدري', items: [
+    'تشغيل فحص SAST قبل كل عملية دمج (merge)',
+    'مراجعة الكود من قِبل شخصين على الأقل',
+    'عدم تخزين بيانات حساسة في الكود',
+    'استخدام متغيرات البيئة للأسرار (Secrets)',
+    'فحص مكتبات الطرف الثالث بـ SCA'
+  ]},
+  { icon: '🌐', title: 'أمان الشبكة', items: [
+    'تشفير جميع الاتصالات بـ TLS 1.3',
+    'إعداد جدار حماية للتطبيقات (WAF)',
+    'تقسيم الشبكة (Network Segmentation)',
+    'مراقبة وتسجيل جميع حركة المرور',
+    'إغلاق المنافذ غير الضرورية'
+  ]},
+  { icon: '📊', title: 'مراقبة وتسجيل', items: [
+    'تمكين تسجيل شامل لجميع الأحداث الأمنية',
+    'إعداد تنبيهات فورية للأنشطة المشبوهة',
+    'الاحتفاظ بالسجلات لمدة 90 يوماً على الأقل',
+    'دمج مع نظام SIEM مركزي',
+    'اختبار آلية التنبيهات شهرياً'
+  ]},
+];
+
+const checkGrid = document.getElementById('checklist-grid');
+checkData.forEach(cat => {
+  const completed = 0;
+  const card = document.createElement('div');
+  card.className = 'check-card';
+  const itemsHTML = cat.items.map((item, i) => `
+    <div class="check-item" onclick="toggleCheck(this)">
+      <div class="check-box"></div>
+      <span class="check-text">${item}</span>
+    </div>
+  `).join('');
+  card.innerHTML = `
+    <div class="check-card-header">
+      <span class="check-icon">${cat.icon}</span>
+      <span class="check-card-title">${cat.title}</span>
+      <span class="check-count">0/${cat.items.length}</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
+    <div class="check-list">${itemsHTML}</div>
+  `;
+  checkGrid.appendChild(card);
+});
+
+function toggleCheck(item) {
+  item.classList.toggle('done');
+  const box = item.querySelector('.check-box');
+  box.classList.toggle('checked');
+  const card = item.closest('.check-card');
+  const total = card.querySelectorAll('.check-item').length;
+  const done = card.querySelectorAll('.check-item.done').length;
+  card.querySelector('.check-count').textContent = `${done}/${total}`;
+  card.querySelector('.progress-fill').style.width = (done/total*100)+'%';
+}
+
+// ===== TERMINAL =====
+const terminalBody = document.getElementById('terminal-body');
+const commands = {
+  help: () => `أوامر متاحة:\n  scan     — فحص سريع للثغرات\n  status   — حالة الأمان الحالية\n  threats  — عرض التهديدات النشطة\n  harden   — توصيات التصليب\n  clear    — مسح الطرفية`,
+  scan: () => {
+    return `[*] بدء الفحص...\n[!] تحذير: منفذ 22 مفتوح للعموم\n[!] تحذير: 3 حزم قديمة تحتوي على ثغرات\n[✓] جدار الحماية: نشط\n[✓] SSL/TLS: صحيح\n[✓] المصادقة: مفعّلة\n--- الفحص اكتمل: 2 مشكلة بحاجة للمعالجة ---`;
+  },
+  status: () => `حالة النظام الأمني:\n  درجة الحماية: 87/100 ✓\n  آخر فحص: منذ 2 ساعة\n  التهديدات النشطة: 2 (حرجة)\n  السجلات: تعمل بشكل طبيعي`,
+  threats: () => `التهديدات النشطة:\n  [🔴] SQL Injection — 23 محاولة/ساعة — مصدر: 45.33.22.1\n  [🔴] Brute Force SSH — 156 محاولة — مصدر: متعدد\n  [🟡] XSS Attempt — 7 محاولات — وضع المراقبة\n  [🟡] Outdated Deps — 7 مكتبات — تحديث مطلوب`,
+  harden: () => `توصيات التصليب الفورية:\n  1. تفعيل fail2ban على SSH\n  2. نقل SSH لمنفذ غير قياسي\n  3. تحديث المكتبات الحساسة\n  4. تفعيل rate limiting على نقاط API\n  5. مراجعة سياسات CSP`,
+  clear: () => null,
+};
+
+function addTerminalLine(prompt, cmd, output, type='out') {
+  if (cmd) {
+    const line = document.createElement('div');
+    line.className = 't-line';
+    line.innerHTML = `<span class="t-prompt">${prompt}</span><span class="t-cmd">${cmd}</span>`;
+    terminalBody.appendChild(line);
+  }
+  if (output !== null) {
+    output.split('\n').forEach(l => {
+      const out = document.createElement('div');
+      out.className = `t-${type}`;
+      out.textContent = l;
+      terminalBody.appendChild(out);
+    });
+    terminalBody.appendChild(document.createElement('br'));
+  }
+  terminalBody.scrollTop = terminalBody.scrollHeight;
+}
+
+function handleTerminal(e) {
+  if (e.key !== 'Enter') return;
+  const input = document.getElementById('terminal-input');
+  const cmd = input.value.trim().toLowerCase();
+  input.value = '';
+  if (!cmd) return;
+  const prompt = 'openclaw@security:~$';
+  if (cmd === 'clear') {
+    terminalBody.innerHTML = '';
+    return;
+  }
+  const handler = commands[cmd];
+  if (handler) {
+    const output = handler();
+    addTerminalLine(prompt, cmd, output, 'out');
+  } else {
+    addTerminalLine(prompt, cmd, `الأمر غير معروف: ${cmd}\nاكتب 'help' لعرض الأوامر المتاحة`, 'err');
+  }
+}
+
+// ===== AI ANALYSIS =====
+async function runAnalysis() {
+  const btn = document.getElementById('analyze-btn');
+  const output = document.getElementById('ai-output');
+  const statusText = document.getElementById('ai-status-text');
+  const type = document.getElementById('analysis-type').value;
+  const query = document.getElementById('ai-query').value.trim();
+
+  if (!query) {
+    output.innerHTML = '<div style="color:var(--red);font-family:IBM Plex Mono,monospace;font-size:13px;text-align:right;direction:rtl;">⚠️ الرجاء وصف الموقف أو التهديد المراد تحليله</div>';
+    return;
+  }
+
+  btn.disabled = true;
+  statusText.textContent = 'ANALYZING...';
+  output.innerHTML = `
+    <div class="thinking" style="direction:rtl;text-align:right;padding:20px;margin:auto">
+      <div class="thinking-dots">
+        <div class="thinking-dot"></div><div class="thinking-dot"></div><div class="thinking-dot"></div>
+      </div>
+      <span>جارٍ تحليل التهديد بالذكاء الاصطناعي...</span>
+    </div>`;
+
+  const typeLabels = {
+    threat: 'تحليل تهديد',
+    code: 'مراجعة كود',
+    config: 'تقييم إعدادات',
+    incident: 'تحليل حادث',
+    hardening: 'تصليب النظام'
+  };
+
+  const systemPrompt = `أنت محلل أمني متخصص يعمل على منصة OpenClaw Security Intelligence. مهمتك تحليل التهديدات الأمنية وتقديم توصيات مهنية ومفصّلة باللغة العربية.
+
+عند الرد، قدّم تحليلاً منظماً يشمل:
+1. **تقييم الخطورة** (حرجة/عالية/متوسطة/منخفضة) مع نسبة مئوية من 0-100
+2. **تشخيص المشكلة** — تفسير واضح للتهديد
+3. **التداعيات المحتملة** — ما الذي قد يحدث إذا لم يُعالج
+4. **خطوات المعالجة الفورية** — 3-5 خطوات عملية مرتبة حسب الأولوية
+5. **توصيات طويلة الأمد** — للحماية المستدامة
+
+كن دقيقاً، مهنياً، وعملياً. استخدم المصطلحات التقنية الصحيحة مع شرح مبسط.`;
+
+  try {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [{
+          role: "user",
+          content: `نوع التحليل: ${typeLabels[type]}\n\nالموقف/التهديد:\n${query}`
+        }]
+      })
+    });
+
+    const data = await response.json();
+    const text = data.content?.map(c => c.text || '').join('') || 'لم يتم الحصول على رد.';
+
+    // Parse risk level from response
+    let riskLevel = 50, riskColor = 'var(--amber)', riskLabel = 'متوسط';
+    if (text.includes('حرجة') || text.includes('عالية جداً') || text.includes('90') || text.includes('95')) {
+      riskLevel = 90; riskColor = 'var(--red)'; riskLabel = 'حرجة';
+    } else if (text.includes('عالية') || text.includes('70') || text.includes('75') || text.includes('80')) {
+      riskLevel = 72; riskColor = '#ff6b35'; riskLabel = 'عالية';
+    } else if (text.includes('منخفضة') || text.includes('30') || text.includes('25')) {
+      riskLevel = 28; riskColor = 'var(--acid)'; riskLabel = 'منخفضة';
+    }
+
+    // Format response
+    const paragraphs = text.split('\n').filter(l => l.trim()).map(l => {
+      if (l.startsWith('**') || l.startsWith('#') || l.match(/^\d+\./)) {
+        return `<div style="color:var(--acid);font-weight:600;margin:12px 0 4px;font-size:12px">${l.replace(/\*\*/g,'').replace(/#/g,'').trim()}</div>`;
+      }
+      return `<div style="margin-bottom:6px">${l}</div>`;
+    }).join('');
+
+    output.innerHTML = `
+      <div class="ai-response">
+        <div class="risk-meter" style="margin-bottom:20px">
+          <div class="risk-label">مستوى الخطورة المقدّر — <span style="color:${riskColor}">${riskLabel}</span></div>
+          <div class="risk-bar">
+            <div class="risk-fill" style="width:0%;background:${riskColor}" id="risk-fill-anim"></div>
+          </div>
+        </div>
+        <div style="direction:rtl;text-align:right;font-size:13px;line-height:1.9">${paragraphs}</div>
+      </div>`;
+
+    setTimeout(() => {
+      const fill = document.getElementById('risk-fill-anim');
+      if (fill) fill.style.width = riskLevel + '%';
+    }, 100);
+
+    statusText.textContent = 'COMPLETE';
+
+  } catch (err) {
+    output.innerHTML = `<div style="color:var(--red);font-family:'IBM Plex Mono',monospace;font-size:13px;direction:rtl;text-align:right;">
+      ⚠️ خطأ في الاتصال بمحرك التحليل<br><small style="opacity:0.6">${err.message}</small>
+    </div>`;
+    statusText.textContent = 'ERROR';
+  }
+
+  btn.disabled = false;
+}
+
+// Keyboard: Enter in textarea
+document.getElementById('ai-query').addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 'Enter') runAnalysis();
+});
+
+// ===== INTERSECTION OBSERVER (reveal) =====
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.style.opacity = '1';
+      entry.target.style.transform = 'none';
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.check-card, .ai-container, .terminal-wrap').forEach(el => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(30px)';
+  el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+  observer.observe(el);
+});
+</script>
+</body>
+</html>
